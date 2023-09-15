@@ -4,7 +4,7 @@
     <!-- background image -->
     <div class="background w-full h-full">
       <!-- display -->
-      <Display :value="total" />
+      <Display :value="total" :prevValue="prevValue" :calculated="calculated" />
       <div class="h-full flex flex-col flex-wrap">
         <div
           class="buttons flex flex-1 flex-wrap transition-all 1s ease-in-out backdrop-blur-[20px] text-white"
@@ -12,9 +12,7 @@
           <Button @click="clear()" class="flex-1 h-20 backdrop-blur-2xl"
             >C</Button
           >
-          <Button
-            @click="setOperator(operators.Negatate)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="negatate()" class="flex-1 h-20 backdrop-blur-2xl"
             >+/-</Button
           >
           <Button
@@ -114,7 +112,7 @@
             >.</Button
           >
           <Button
-            @click="setOperator(operators.Calculate)"
+            @click="calculate()"
             class="col-span-1 h-20 bg-sky-400 bg-opacity-20"
             >=</Button
           >
@@ -129,19 +127,96 @@ import Button from "./components/Button.vue";
 import Display from "./components/Display.vue";
 
 const operators = {
-  Sum: "sum",
-  Subtraction: "subtraction",
-  Calculate: "calculate",
-  Multiplication: "multiplication",
-  Divide: "divide",
-  Percent: "percent",
-  Negatate: "negatate",
+  Sum: {
+    name: "Sum",
+    symbol: "+",
+    perform: function (x, y) {
+      return x + y;
+    },
+  },
+  Subtraction: {
+    name: "Subtraction",
+    symbol: "-",
+    perform: function (x, y) {
+      return x - y;
+    },
+  },
+  Calculate: {
+    name: "Calculate",
+    symbol: "=",
+    perform: function (x, y) {
+      return x; // Just returns the first number for demonstration
+    },
+  },
+  Multiplication: {
+    name: "Multiplication",
+    symbol: "*",
+    perform: function (x, y) {
+      return x * y;
+    },
+  },
+  Divide: {
+    name: "Divide",
+    symbol: "/",
+    perform: function (x, y) {
+      if (y === 0) {
+        return "Cannot divide by zero";
+      }
+      return x / y;
+    },
+  },
+  Percent: {
+    name: "Percent",
+    symbol: "%",
+    perform: function (x, y) {
+      return (x * y) / 100;
+    },
+  },
+  Empty: {
+    name: "Empty",
+    symbol: "",
+    perform: function (x, y) {
+      return "No operation specified";
+    },
+  },
 };
-
+const prevValue = ref("");
 const total = ref("");
 
+// after the setOperator, this would be true for re-defining in the next append
+// total: 99, set operator to sum,
+// next append -> total: append.value
+const setted = ref(false);
+const currentOperator = ref(operators.Empty);
+const calculated = ref(false);
+
+function calculate() {
+  if (currentOperator.value !== operators.Empty) {
+    try {
+      const x = parseFloat(prevValue.value);
+      const y = parseFloat(total.value);
+      const result = currentOperator.value.perform(x, y);
+      prevValue.value += ` ${total.value}`;
+      total.value = result.toString();
+      calculated.value = true;
+    } catch (error) {
+      total.value = "Error";
+      console.error("Calculation error:", error);
+    }
+  }
+}
+
+function setOperator(newOperator) {
+  currentOperator.value = newOperator;
+  prevValue.value = `${total.value}\u00A0${currentOperator.value.symbol}`;
+  setted.value = true;
+}
+
 function clear() {
+  prevValue.value = "";
   total.value = "";
+  currentOperator.value = operators.Empty;
+  setted.value = false;
 }
 
 function negatate() {
@@ -149,6 +224,10 @@ function negatate() {
 }
 
 function append(event, val) {
+  if (setted.value) {
+    total.value = "";
+    setted.value = false;
+  }
   console.log(event.target.innerText);
   total.value += event.target.innerText;
   console.log(`total = ${total.value}`);
