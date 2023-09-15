@@ -4,6 +4,7 @@
     <!-- background image -->
     <div class="background w-full h-full">
       <!-- display -->
+      <Head />
       <Display :value="total" :prevValue="prevValue" :calculated="calculated" />
       <div class="h-full flex flex-col flex-wrap">
         <div
@@ -125,6 +126,7 @@
 import { ref } from "vue";
 import Button from "./components/Button.vue";
 import Display from "./components/Display.vue";
+import Head from "./components/Head.vue";
 
 const operators = {
   Sum: {
