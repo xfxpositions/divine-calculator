@@ -1,0 +1,10 @@
+.background {
+  background-image: url("/bg.jpg");
+  object-fit: contain;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+::-webkit-scrollbar {
+  display: none;
+}

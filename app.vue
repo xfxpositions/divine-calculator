@@ -7,12 +7,7 @@
     </div>
   </div>
 </template>
-<style>
-.background {
-  background-image: url("/bg.jpg");
-  object-fit: contain;
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
-}
-</style>
+<script setup>
+import "@/assets/css/main.css";
+</script>
+<style></style>
