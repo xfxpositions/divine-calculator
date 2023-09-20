@@ -2,9 +2,9 @@
   <!-- container -->
   <div class="rounded-lg overflow-hidden">
     <!-- background image -->
-    <div class="background w-full h-full">
+    <div class="">
       <!-- display -->
-      <Head />
+      <HeadSection />
       <Display :value="total" :prevValue="prevValue" :calculated="calculated" />
       <div class="h-full flex flex-col flex-wrap">
         <div
@@ -124,9 +124,6 @@
 </template>
 <script setup>
 import { ref } from "vue";
-import Button from "./components/Button.vue";
-import Display from "./components/Display.vue";
-import Head from "./components/Head.vue";
 
 const operators = {
   Sum: {
@@ -239,7 +236,7 @@ function append(event, val) {
 .background {
   max-width: 500px;
   max-height: 1200px;
-  background-image: url("src/public/bg.jpg");
+  background-image: url("/bg.jpg");
   object-fit: contain;
   background-position: center;
   background-size: cover;
