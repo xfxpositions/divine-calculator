@@ -10,4 +10,8 @@
 <script setup>
 import "@/assets/css/main.css";
 </script>
-<style></style>
+<style>
+body {
+  height: 100vh;
+}
+</style>
