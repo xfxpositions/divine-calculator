@@ -216,6 +216,7 @@ function clear() {
   total.value = "";
   currentOperator.value = operators.Empty;
   setted.value = false;
+  calculated.value = false;
 }
 
 function negatate() {
