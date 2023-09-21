@@ -9,7 +9,14 @@
     <div class="" @paste="onPasteHandler()" @copy="onCopyHandler()">
       <!-- display -->
       <HeadSection />
-      <Display :value="total" :prevValue="prevValue" :calculated="calculated" />
+      <Display
+        :value="total"
+        :displayX="displayX"
+        :displayY="displayY"
+        :operator="currentOperator.symbol"
+        :calculated="calculated"
+        :ErrorMessage="errorMessage"
+      />
       <Memory :total="Number(total)" @recall="memoryRecallHandler" />
       <div class="h-full flex flex-col flex-wrap">
         <div
@@ -108,6 +115,7 @@
 <script setup>
 import { ref } from "vue";
 import isNumber from "is-number";
+import isNan from "is-nan";
 
 const operators = {
   Sum: {
@@ -188,30 +196,35 @@ const keyMappings = {
     Backspace: () => {
       total.value = total.value.slice(0, -1);
     },
-    c: clear,
   },
 };
 
-window.document.addEventListener("keydown", (e) => {
-  const key = e.key;
-  console.log(key);
-  if (key == "Enter") {
-    calculate();
-    return;
-  }
-  if (keyMappings.numbers[key]) {
-    append(keyMappings.numbers[key]);
-  }
-  if (keyMappings.operators[key]) {
-    setOperator(keyMappings.operators[key]);
-    console.log(keyMappings.operators[key]);
-  }
-  if (keyMappings.functions[key]) keyMappings.functions[key]();
+onMounted(() => {
+  window.document.addEventListener("keydown", (e) => {
+    const key = e.key;
+    if (key == "Enter") {
+      calculate();
+      return;
+    }
+    if (keyMappings.numbers[key]) {
+      append(keyMappings.numbers[key]);
+    }
+    if (keyMappings.operators[key]) {
+      setOperator(keyMappings.operators[key]);
+    }
+    if (keyMappings.functions[key]) keyMappings.functions[key]();
+    if (key === "c" && !e.ctrlKey) {
+      clear();
+    }
+  });
 });
 
+const errorMessage = ref("");
 const isError = ref(false);
 const prevValue = ref("");
 const total = ref("");
+const displayX = ref("");
+const displayY = ref("");
 
 // after the setOperator, this would be true for re-defining in the next append
 // total: 99, set operator to sum,
@@ -227,41 +240,70 @@ function onPasteHandler(e) {
     if (isNumber(text)) {
       total.value = text;
     }
-    console.log(text);
   });
 }
 
 function onCopyHandler(e) {
   navigator.clipboard.writeText(total.value);
-  console.log("copied");
 }
 
 function memoryRecallHandler(memory) {
-  console.log(memory);
-
   total.value = memory.toString();
 }
 
 function calculate() {
+  console.log(calculated.value);
+  if (calculated.value) {
+    displayX.value = total.value;
+  }
+  // Check if is not empty
   if (currentOperator.value !== operators.Empty) {
+    // Divide by zero error
+    if (
+      Number(total.value) === 0 &&
+      currentOperator.value.symbol == operators.Divide.symbol
+    ) {
+      isError.value = true;
+      errorMessage.value = "Sıfıra Bölünemez";
+      return;
+    }
     try {
-      const x = parseFloat(prevValue.value);
-      const y = parseFloat(total.value);
+      if (!calculated.value) {
+        displayY.value = total.value;
+      } else {
+        displayY.value = displayY.value;
+      }
+      // Perform
+      const x = parseFloat(displayX.value);
+      const y = parseFloat(displayY.value);
       const result = currentOperator.value.perform(x, y);
+      if (isNaN(result)) {
+        isError.value = true;
+        errorMessage.value = "Hata";
+        return;
+      }
       prevValue.value += ` ${total.value}`;
+
       total.value = result.toString();
       calculated.value = true;
+      isError.value = false;
+      errorMessage.value = "";
     } catch (error) {
       isError.value = true;
-      total.value = "Error";
+      errorMessage.value = error;
       console.error("Calculation error:", error);
     }
   }
 }
 
 function setOperator(newOperator) {
+  if (calculated.value) calculated.value = false;
   previousOperator.value = currentOperator.value;
   currentOperator.value = newOperator;
+
+  if (total.value.length > 0) {
+    displayX.value = total.value;
+  }
 
   if (
     previousOperator.value.symbol == operators.Subtraction.symbol &&
@@ -279,6 +321,8 @@ function clear() {
   currentOperator.value = operators.Empty;
   setted.value = false;
   calculated.value = false;
+  displayX.value = "";
+  displayY.value = "";
 }
 
 function negatate() {
@@ -286,6 +330,13 @@ function negatate() {
 }
 
 function append(val) {
+  // max 20 digits
+  if (total.value.length == 20) return;
+  if (calculated.value) calculated.value = false;
+  if (isError) {
+    errorMessage.value = "";
+    isError.value = false;
+  }
   val = String(val);
   if (total.value === "0") {
     total.value = "";
