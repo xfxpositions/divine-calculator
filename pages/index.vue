@@ -9,7 +9,12 @@
     <div class="" @paste="onPasteHandler()" @copy="onCopyHandler()">
       <!-- display -->
       <HeadSection />
-      <Display :value="total" :prevValue="prevValue" :calculated="calculated" />
+      <Display
+        :value="total"
+        :prevValue="prevValue"
+        :calculated="calculated"
+        :ErrorMessage="errorMessage"
+      />
       <Memory :total="Number(total)" @recall="memoryRecallHandler" />
       <div class="h-full flex flex-col flex-wrap">
         <div
@@ -108,6 +113,7 @@
 <script setup>
 import { ref } from "vue";
 import isNumber from "is-number";
+import isNan from "is-nan";
 
 const operators = {
   Sum: {
@@ -192,23 +198,26 @@ const keyMappings = {
   },
 };
 
-window.document.addEventListener("keydown", (e) => {
-  const key = e.key;
-  console.log(key);
-  if (key == "Enter") {
-    calculate();
-    return;
-  }
-  if (keyMappings.numbers[key]) {
-    append(keyMappings.numbers[key]);
-  }
-  if (keyMappings.operators[key]) {
-    setOperator(keyMappings.operators[key]);
-    console.log(keyMappings.operators[key]);
-  }
-  if (keyMappings.functions[key]) keyMappings.functions[key]();
+onMounted(() => {
+  window.document.addEventListener("keydown", (e) => {
+    const key = e.key;
+    console.log(key);
+    if (key == "Enter") {
+      calculate();
+      return;
+    }
+    if (keyMappings.numbers[key]) {
+      append(keyMappings.numbers[key]);
+    }
+    if (keyMappings.operators[key]) {
+      setOperator(keyMappings.operators[key]);
+      console.log(keyMappings.operators[key]);
+    }
+    if (keyMappings.functions[key]) keyMappings.functions[key]();
+  });
 });
 
+const errorMessage = ref("");
 const isError = ref(false);
 const prevValue = ref("");
 const total = ref("");
@@ -244,16 +253,31 @@ function memoryRecallHandler(memory) {
 
 function calculate() {
   if (currentOperator.value !== operators.Empty) {
+    if (
+      Number(total.value) === 0 &&
+      currentOperator.value.symbol == operators.Divide.symbol
+    ) {
+      isError.value = true;
+      errorMessage.value = "Sıfıra Bölünemez";
+      return;
+    }
     try {
       const x = parseFloat(prevValue.value);
       const y = parseFloat(total.value);
       const result = currentOperator.value.perform(x, y);
+      if (isNaN(result)) {
+        isError.value = true;
+        errorMessage.value = "Hata";
+        return;
+      }
       prevValue.value += ` ${total.value}`;
       total.value = result.toString();
       calculated.value = true;
+      isError.value = false;
+      errorMessage.value = "";
     } catch (error) {
       isError.value = true;
-      total.value = "Error";
+      errorMessage.value = error;
       console.error("Calculation error:", error);
     }
   }
@@ -286,6 +310,10 @@ function negatate() {
 }
 
 function append(val) {
+  if (isError) {
+    errorMessage.value = "";
+    isError.value = false;
+  }
   val = String(val);
   if (total.value === "0") {
     total.value = "";

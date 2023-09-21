@@ -9,8 +9,11 @@
         {{ prevValue }}{{ calculated ? " =" : "" }}
       </div>
 
-      <span class="mr-5 text-slate-300 text-[48px]">{{
+      <span v-if="!ErrorMessage" class="mr-5 text-slate-300 text-[48px]">{{
         value == "" ? "0" : value
+      }}</span>
+      <span v-else class="mr-5 text-slate-300 text-[48px]">{{
+        ErrorMessage
       }}</span>
     </div>
   </div>
@@ -26,9 +29,10 @@ function contextHandler(e) {
   e.stopPropagation();
 }
 
-const { value, prevValue, calculated } = defineProps({
+const { value, prevValue, calculated, ErrorMessage } = defineProps({
   value: String,
   prevValue: String,
   calculated: Boolean,
+  ErrorMessage: String,
 });
 </script>
