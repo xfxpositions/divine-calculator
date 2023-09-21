@@ -1,11 +1,16 @@
 <template>
   <!-- container -->
-  <div class="rounded-lg overflow-hidden">
+  <div
+    class="rounded-lg overflow-hidden"
+    @paste="onPasteHandler()"
+    @copy="onCopyHandler()"
+  >
     <!-- background image -->
-    <div class="">
+    <div class="" @paste="onPasteHandler()" @copy="onCopyHandler()">
       <!-- display -->
       <HeadSection />
       <Display :value="total" :prevValue="prevValue" :calculated="calculated" />
+      <Memory></Memory>
       <div class="h-full flex flex-col flex-wrap">
         <div
           class="buttons flex flex-1 flex-wrap transition-all 1s ease-in-out backdrop-blur-[20px] text-white"
@@ -181,13 +186,27 @@ const operators = {
 };
 const prevValue = ref("");
 const total = ref("");
-
+import isNumber from "is-number";
 // after the setOperator, this would be true for re-defining in the next append
 // total: 99, set operator to sum,
 // next append -> total: append.value
 const setted = ref(false);
 const currentOperator = ref(operators.Empty);
 const calculated = ref(false);
+
+function onPasteHandler(e) {
+  navigator.clipboard.readText().then((text) => {
+    if (isNumber(text)) {
+      total.value = text;
+    }
+    console.log(text);
+  });
+}
+
+function onCopyHandler(e) {
+  navigator.clipboard.writeText(total.value);
+  console.log("copied");
+}
 
 function calculate() {
   if (currentOperator.value !== operators.Empty) {
@@ -228,6 +247,8 @@ function append(event, val) {
     total.value = "";
     setted.value = false;
   }
+  // don't add more than one '.' character
+  if (total.value.includes(".") && event.target.innerText == ".") return;
   console.log(event.target.innerText);
   total.value += event.target.innerText;
   console.log(`total = ${total.value}`);

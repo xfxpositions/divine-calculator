@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@nuxtjs/tailwindcss": "^6.8.0",
+    "is-number": "^7.0.0",
     "nuxt-storage": "^1.2.2",
     "tauri": "^0.15.0",
     "tauri-settings": "^0.3.4"

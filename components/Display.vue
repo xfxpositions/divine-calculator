@@ -1,5 +1,9 @@
 <template>
-  <div class="w-full h-24 backdrop-blur-lg cursor-default">
+  <ContextMenu :open="contextMenuOpen" />
+  <div
+    @contextmenu="contextHandler()"
+    class="w-full h-24 backdrop-blur-lg cursor-default"
+  >
     <div class="text-slate-300 font-bold text-right flex flex-col">
       <div class="mr-8 text-[18px] box-border pt-2">
         {{ prevValue }}{{ calculated ? " =" : "" }}
@@ -10,10 +14,17 @@
       }}</span>
     </div>
   </div>
-  <div></div>
 </template>
 <script setup>
 import { ref } from "vue";
+
+const contextMenuOpen = ref(false);
+
+function contextHandler(e) {
+  contextMenuOpen.value = !contextMenuOpen.value;
+  e.preventDefault();
+  e.stopPropagation();
+}
 
 const { value, prevValue, calculated } = defineProps({
   value: String,

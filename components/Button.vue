@@ -5,10 +5,9 @@
     <slot />
   </button>
 </template>
-
 <style scoped>
 .btn:hover {
-  filter: blur(1px);
+  /* filter: blur(1px); */
   backdrop-filter: blur(10px);
 }
 </style>
