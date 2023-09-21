@@ -47,6 +47,24 @@
         <input id="dropzone-file" type="file" class="hidden" />
       </label>
     </div>
+    <!-- storage -->
+    <br />
+    <h2 class="text-xl font-bold">Storage</h2>
+    <h3 class="text-md font-semibold">Memory Storage Type</h3>
+
+    <div class="flex gap-1 justify-start items-center my-6">
+      <button
+        class="bg-gray-700 bg-opacity-50 hover:bg-opacity-90 rounded-md transition-all duration-300 ease-in-out text-white cursor-default box-border px-3 py-2"
+      >
+        Local
+      </button>
+      <button
+        class="bg-gray-700 bg-opacity-50 hover:bg-opacity-90 rounded-md transition-all duration-300 ease-in-out text-white cursor-default box-border px-3 py-2"
+      >
+        Session
+      </button>
+    </div>
+
     <!-- set defaults -->
     <br />
     <button

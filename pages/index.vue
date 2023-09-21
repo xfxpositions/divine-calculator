@@ -1,11 +1,16 @@
 <template>
   <!-- container -->
-  <div class="rounded-lg overflow-hidden">
+  <div
+    class="rounded-lg overflow-hidden"
+    @paste="onPasteHandler()"
+    @copy="onCopyHandler()"
+  >
     <!-- background image -->
-    <div class="">
+    <div class="" @paste="onPasteHandler()" @copy="onCopyHandler()">
       <!-- display -->
       <HeadSection />
       <Display :value="total" :prevValue="prevValue" :calculated="calculated" />
+      <Memory :total="Number(total)" @recall="memoryRecallHandler" />
       <div class="h-full flex flex-col flex-wrap">
         <div
           class="buttons flex flex-1 flex-wrap transition-all 1s ease-in-out backdrop-blur-[20px] text-white"
@@ -30,19 +35,13 @@
         <div
           class="buttons w-full flex flex-1 flex-wrap transition-all 1s ease-in-out backdrop-blur-[20px] text-white"
         >
-          <Button
-            @click="append($event, 7)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('7')" class="flex-1 h-20 backdrop-blur-2xl"
             >7</Button
           >
-          <Button
-            @click="append($event, 8)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('8')" class="flex-1 h-20 backdrop-blur-2xl"
             >8</Button
           >
-          <Button
-            @click="append($event, 9)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('9')" class="flex-1 h-20 backdrop-blur-2xl"
             >9</Button
           >
           <Button
@@ -54,19 +53,13 @@
         <div
           class="buttons w-full flex flex-1 flex-wrap transition-all 1s ease-in-out backdrop-blur-[20px] text-white"
         >
-          <Button
-            @click="append($event, 4)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('4')" class="flex-1 h-20 backdrop-blur-2xl"
             >4</Button
           >
-          <Button
-            @click="append($event, 5)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('5')" class="flex-1 h-20 backdrop-blur-2xl"
             >5</Button
           >
-          <Button
-            @click="append($event, 6)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('6')" class="flex-1 h-20 backdrop-blur-2xl"
             >6</Button
           >
           <Button
@@ -78,19 +71,13 @@
         <div
           class="buttons w-full flex flex-1 flex-wrap transition-all 1s ease-in-out backdrop-blur-[20px] text-white"
         >
-          <Button
-            @click="append($event, 1)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('1')" class="flex-1 h-20 backdrop-blur-2xl"
             >1</Button
           >
-          <Button
-            @click="append($event, 2)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('2')" class="flex-1 h-20 backdrop-blur-2xl"
             >2</Button
           >
-          <Button
-            @click="append($event, 3)"
-            class="flex-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('3')" class="flex-1 h-20 backdrop-blur-2xl"
             >3</Button
           >
           <Button
@@ -102,14 +89,10 @@
         <div
           class="buttons w-full grid grid-cols-4 flex-1 flex-wrap transition-all 1s ease-in-out backdrop-blur-[20px] text-white"
         >
-          <Button
-            @click="append($event, 0)"
-            class="col-span-2 h-20 backdrop-blur-2xl"
+          <Button @click="append('0')" class="col-span-2 h-20 backdrop-blur-2xl"
             >0</Button
           >
-          <Button
-            @click="append($event, '=')"
-            class="col-span-1 h-20 backdrop-blur-2xl"
+          <Button @click="append('=')" class="col-span-1 h-20 backdrop-blur-2xl"
             >.</Button
           >
           <Button
@@ -124,6 +107,7 @@
 </template>
 <script setup>
 import { ref } from "vue";
+import isNumber from "is-number";
 
 const operators = {
   Sum: {
@@ -179,6 +163,53 @@ const operators = {
     },
   },
 };
+
+const keyMappings = {
+  numbers: {
+    0: "0",
+    1: "1",
+    2: "2",
+    3: "3",
+    4: "4",
+    5: "5",
+    6: "6",
+    7: "7",
+    8: "8",
+    9: "9",
+    ".": ".",
+  },
+  operators: {
+    "+": operators.Sum,
+    "-": operators.Subtraction,
+    "*": operators.Multiplication,
+    "/": operators.Divide,
+  },
+  functions: {
+    Backspace: () => {
+      total.value = total.value.slice(0, -1);
+    },
+    c: clear,
+  },
+};
+
+window.document.addEventListener("keydown", (e) => {
+  const key = e.key;
+  console.log(key);
+  if (key == "Enter") {
+    calculate();
+    return;
+  }
+  if (keyMappings.numbers[key]) {
+    append(keyMappings.numbers[key]);
+  }
+  if (keyMappings.operators[key]) {
+    setOperator(keyMappings.operators[key]);
+    console.log(keyMappings.operators[key]);
+  }
+  if (keyMappings.functions[key]) keyMappings.functions[key]();
+});
+
+const isError = ref(false);
 const prevValue = ref("");
 const total = ref("");
 
@@ -187,7 +218,29 @@ const total = ref("");
 // next append -> total: append.value
 const setted = ref(false);
 const currentOperator = ref(operators.Empty);
+const previousOperator = ref(operators.Empty);
+
 const calculated = ref(false);
+
+function onPasteHandler(e) {
+  navigator.clipboard.readText().then((text) => {
+    if (isNumber(text)) {
+      total.value = text;
+    }
+    console.log(text);
+  });
+}
+
+function onCopyHandler(e) {
+  navigator.clipboard.writeText(total.value);
+  console.log("copied");
+}
+
+function memoryRecallHandler(memory) {
+  console.log(memory);
+
+  total.value = memory.toString();
+}
 
 function calculate() {
   if (currentOperator.value !== operators.Empty) {
@@ -199,6 +252,7 @@ function calculate() {
       total.value = result.toString();
       calculated.value = true;
     } catch (error) {
+      isError.value = true;
       total.value = "Error";
       console.error("Calculation error:", error);
     }
@@ -206,7 +260,15 @@ function calculate() {
 }
 
 function setOperator(newOperator) {
+  previousOperator.value = currentOperator.value;
   currentOperator.value = newOperator;
+
+  if (
+    previousOperator.value.symbol == operators.Subtraction.symbol &&
+    currentOperator.value.symbol == operators.Sum.symbol
+  ) {
+    total.value = Number(-total.value).toString();
+  }
   prevValue.value = `${total.value}\u00A0${currentOperator.value.symbol}`;
   setted.value = true;
 }
@@ -223,13 +285,18 @@ function negatate() {
   total.value = -total.value;
 }
 
-function append(event, val) {
+function append(val) {
+  val = String(val);
+  if (total.value === "0") {
+    total.value = "";
+  }
   if (setted.value) {
     total.value = "";
     setted.value = false;
   }
-  console.log(event.target.innerText);
-  total.value += event.target.innerText;
+  // don't add more than one '.' character
+  if (total.value.includes(".") && event.target.innerText == ".") return;
+  total.value += val;
   console.log(`total = ${total.value}`);
 }
 </script>
