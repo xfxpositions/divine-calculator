@@ -193,6 +193,8 @@ const total = ref("");
 // next append -> total: append.value
 const setted = ref(false);
 const currentOperator = ref(operators.Empty);
+const previousOperator = ref(operators.Empty);
+
 const calculated = ref(false);
 
 function onPasteHandler(e) {
@@ -232,7 +234,15 @@ function calculate() {
 }
 
 function setOperator(newOperator) {
+  previousOperator.value = currentOperator.value;
   currentOperator.value = newOperator;
+
+  if (
+    previousOperator.value.symbol == operators.Subtraction.symbol &&
+    currentOperator.value.symbol == operators.Sum.symbol
+  ) {
+    total.value = Number(-total.value).toString();
+  }
   prevValue.value = `${total.value}\u00A0${currentOperator.value.symbol}`;
   setted.value = true;
 }
