@@ -10,7 +10,7 @@
       <!-- display -->
       <HeadSection />
       <Display :value="total" :prevValue="prevValue" :calculated="calculated" />
-      <Memory></Memory>
+      <Memory :total="Number(total)" @recall="memoryRecallHandler" />
       <div class="h-full flex flex-col flex-wrap">
         <div
           class="buttons flex flex-1 flex-wrap transition-all 1s ease-in-out backdrop-blur-[20px] text-white"
@@ -129,6 +129,7 @@
 </template>
 <script setup>
 import { ref } from "vue";
+import isNumber from "is-number";
 
 const operators = {
   Sum: {
@@ -186,7 +187,7 @@ const operators = {
 };
 const prevValue = ref("");
 const total = ref("");
-import isNumber from "is-number";
+
 // after the setOperator, this would be true for re-defining in the next append
 // total: 99, set operator to sum,
 // next append -> total: append.value
@@ -206,6 +207,12 @@ function onPasteHandler(e) {
 function onCopyHandler(e) {
   navigator.clipboard.writeText(total.value);
   console.log("copied");
+}
+
+function memoryRecallHandler(memory) {
+  console.log(memory);
+
+  total.value = memory.toString();
 }
 
 function calculate() {
@@ -243,6 +250,9 @@ function negatate() {
 }
 
 function append(event, val) {
+  if (total.value === "0") {
+    total.value = "";
+  }
   if (setted.value) {
     total.value = "";
     setted.value = false;
