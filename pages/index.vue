@@ -11,7 +11,9 @@
       <HeadSection />
       <Display
         :value="total"
-        :prevValue="prevValue"
+        :displayX="displayX"
+        :displayY="displayY"
+        :operator="currentOperator.symbol"
         :calculated="calculated"
         :ErrorMessage="errorMessage"
       />
@@ -194,14 +196,12 @@ const keyMappings = {
     Backspace: () => {
       total.value = total.value.slice(0, -1);
     },
-    c: clear,
   },
 };
 
 onMounted(() => {
   window.document.addEventListener("keydown", (e) => {
     const key = e.key;
-    console.log(key);
     if (key == "Enter") {
       calculate();
       return;
@@ -211,9 +211,11 @@ onMounted(() => {
     }
     if (keyMappings.operators[key]) {
       setOperator(keyMappings.operators[key]);
-      console.log(keyMappings.operators[key]);
     }
     if (keyMappings.functions[key]) keyMappings.functions[key]();
+    if (key === "c" && !e.ctrlKey) {
+      clear();
+    }
   });
 });
 
@@ -221,6 +223,8 @@ const errorMessage = ref("");
 const isError = ref(false);
 const prevValue = ref("");
 const total = ref("");
+const displayX = ref("");
+const displayY = ref("");
 
 // after the setOperator, this would be true for re-defining in the next append
 // total: 99, set operator to sum,
@@ -236,23 +240,25 @@ function onPasteHandler(e) {
     if (isNumber(text)) {
       total.value = text;
     }
-    console.log(text);
   });
 }
 
 function onCopyHandler(e) {
   navigator.clipboard.writeText(total.value);
-  console.log("copied");
 }
 
 function memoryRecallHandler(memory) {
-  console.log(memory);
-
   total.value = memory.toString();
 }
 
 function calculate() {
+  console.log(calculated.value);
+  if (calculated.value) {
+    displayX.value = total.value;
+  }
+  // Check if is not empty
   if (currentOperator.value !== operators.Empty) {
+    // Divide by zero error
     if (
       Number(total.value) === 0 &&
       currentOperator.value.symbol == operators.Divide.symbol
@@ -262,8 +268,14 @@ function calculate() {
       return;
     }
     try {
-      const x = parseFloat(prevValue.value);
-      const y = parseFloat(total.value);
+      if (!calculated.value) {
+        displayY.value = total.value;
+      } else {
+        displayY.value = displayY.value;
+      }
+      // Perform
+      const x = parseFloat(displayX.value);
+      const y = parseFloat(displayY.value);
       const result = currentOperator.value.perform(x, y);
       if (isNaN(result)) {
         isError.value = true;
@@ -271,6 +283,7 @@ function calculate() {
         return;
       }
       prevValue.value += ` ${total.value}`;
+
       total.value = result.toString();
       calculated.value = true;
       isError.value = false;
@@ -284,8 +297,13 @@ function calculate() {
 }
 
 function setOperator(newOperator) {
+  if (calculated.value) calculated.value = false;
   previousOperator.value = currentOperator.value;
   currentOperator.value = newOperator;
+
+  if (total.value.length > 0) {
+    displayX.value = total.value;
+  }
 
   if (
     previousOperator.value.symbol == operators.Subtraction.symbol &&
@@ -303,6 +321,8 @@ function clear() {
   currentOperator.value = operators.Empty;
   setted.value = false;
   calculated.value = false;
+  displayX.value = "";
+  displayY.value = "";
 }
 
 function negatate() {
@@ -310,6 +330,9 @@ function negatate() {
 }
 
 function append(val) {
+  // max 20 digits
+  if (total.value.length == 20) return;
+  if (calculated.value) calculated.value = false;
   if (isError) {
     errorMessage.value = "";
     isError.value = false;

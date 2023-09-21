@@ -6,12 +6,15 @@
   >
     <div class="text-slate-300 font-bold text-right flex flex-col">
       <div class="mr-8 text-[18px] box-border pt-2">
-        {{ prevValue }}{{ calculated ? " =" : "" }}
+        {{ displayX + " " }} {{ operator + " " }} {{ displayY + " "
+        }}{{ calculated ? " =" : "" }}
       </div>
 
-      <span v-if="!ErrorMessage" class="mr-5 text-slate-300 text-[48px]">{{
-        value == "" ? "0" : value
-      }}</span>
+      <span
+        v-if="!ErrorMessage"
+        class="dtext mr-5 text-slate-300 text-[48px] overflow-auto"
+        >{{ value == "" ? "0" : value }}</span
+      >
       <span v-else class="mr-5 text-slate-300 text-[48px]">{{
         ErrorMessage
       }}</span>
@@ -29,10 +32,18 @@ function contextHandler(e) {
   e.stopPropagation();
 }
 
-const { value, prevValue, calculated, ErrorMessage } = defineProps({
-  value: String,
-  prevValue: String,
-  calculated: Boolean,
-  ErrorMessage: String,
-});
+const { value, displayX, displayY, operator, calculated, ErrorMessage } =
+  defineProps({
+    value: String,
+    displayX: String,
+    displayY: String,
+    operator: String,
+    calculated: Boolean,
+    ErrorMessage: String,
+  });
 </script>
+
+<style>
+.dtext {
+}
+</style>
